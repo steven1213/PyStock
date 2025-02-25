@@ -30,7 +30,7 @@ def backtest_strategy(stock_codes, start_date, end_date):
                 'date': date_str,
                 'ts_code': stock['ts_code'],
                 'close': stock['close'],
-                'gain': stock['涨幅']
+                'gain': stock['pct_chg']  # 使用pct_chg字段
             })
     
     return pd.DataFrame(results)
@@ -38,8 +38,8 @@ def backtest_strategy(stock_codes, start_date, end_date):
 if __name__ == "__main__":
     # 假设我们从分析程序中得到了涨幅超过10%的股票代码
     stock_codes = ['300001', '300002']  # 示例股票代码
-    start_date = "20230101"
-    end_date = "20230110"
+    start_date = "20240102"
+    end_date = "20240130"
 
     # 回测策略
     backtest_results = backtest_strategy(stock_codes, start_date, end_date)
