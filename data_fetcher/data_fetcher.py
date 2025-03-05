@@ -1,7 +1,7 @@
 import tushare as ts
 import pandas as pd
 import os
-from config import TUSHARE_TOKEN, MAX_TS_CODES
+from config.config import TUSHARE_TOKEN, MAX_TS_CODES
 from datetime import datetime
 
 # 设置Tushare的token

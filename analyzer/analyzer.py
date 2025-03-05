@@ -15,16 +15,60 @@ def find_stocks_with_gain(data, threshold=0.1):
     # 找出涨幅超过10%的股票
     return data[data['涨幅'] > threshold]
 
-def analyze_stocks(previous_data, current_data):
-    # 找出当前涨幅超过10%的股票
-    gain_stocks = find_stocks_with_gain(current_data)
-    gain_stocks_codes = gain_stocks['ts_code'].tolist()
+# analyzer.py
 
-    # 找出前一天的对应股票
-    previous_gain_stocks = previous_data[previous_data['ts_code'].isin(gain_stocks_codes)]
+import pandas as pd
+import numpy as np
+
+def analyze_stocks(previous_data, current_data):
+    """
+    分析股票数据，找出涨幅超过10%的股票
     
-    # 分析上涨的秘密
-    secret_codes = analyze_secret_codes(gain_stocks, previous_gain_stocks)
+    Args:
+        previous_data: 前一天的股票数据
+        current_data: 当前的股票数据
+    
+    Returns:
+        gain_stocks: 涨幅超过10%的股票
+        previous_gain_stocks: 前一天涨幅超过10%的股票
+        secret_codes: 连续两天涨幅超过10%的股票
+    """
+    # 检查数据是否为空
+    if current_data.empty or previous_data.empty:
+        print("警告: 输入的数据为空，无法进行分析")
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    
+    # 检查必要的列是否存在
+    required_columns = ['ts_code', 'close', 'pct_chg']
+    for df, name in [(current_data, "current_data"), (previous_data, "previous_data")]:
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            print(f"警告: {name} 缺少必要的列: {missing_columns}")
+            print(f"可用的列: {df.columns.tolist()}")
+            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    
+    # 复制数据以避免修改原始数据
+    data = current_data.copy()
+    prev_data = previous_data.copy()
+    
+    # 计算涨幅
+    data['涨幅'] = data['pct_chg'] / 100  # 将百分比转换为小数
+    prev_data['涨幅'] = prev_data['pct_chg'] / 100
+    
+    # 找出涨幅超过10%的股票
+    gain_stocks = data[data['涨幅'] > 0.1]
+    previous_gain_stocks = prev_data[prev_data['涨幅'] > 0.1]
+    
+    # 找出连续两天涨幅超过10%的股票
+    gain_codes = set(gain_stocks['ts_code'])
+    previous_gain_codes = set(previous_gain_stocks['ts_code'])
+    secret_codes_set = gain_codes.intersection(previous_gain_codes)
+    
+    # 将连续两天涨幅超过10%的股票转换为DataFrame
+    if secret_codes_set:
+        secret_codes = data[data['ts_code'].isin(secret_codes_set)]
+    else:
+        secret_codes = pd.DataFrame()
     
     return gain_stocks, previous_gain_stocks, secret_codes
 
@@ -67,4 +111,4 @@ if __name__ == "__main__":
     print(secret_codes['行业分布'])
     print("平均成交量：", secret_codes['平均成交量'])
     print("平均涨幅：", secret_codes['平均涨幅'])
-    print("前期平均涨幅：", secret_codes['前期平均涨幅']) 
+    print("前期平均涨幅：", secret_codes['前期平均涨幅'])
